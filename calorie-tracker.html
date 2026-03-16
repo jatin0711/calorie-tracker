@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Calorie Tracker — 57 → 65 kg</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,500;1,300&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0f0f0e;--surface:#1a1a18;--surface2:#242422;--border:#2e2e2b;
+  --green:#a8e063;--amber:#f5c842;--red:#e85d4a;
+  --text:#f0efe8;--muted:#7a7a72;
+  --font-mono:'DM Mono',monospace;--font-serif:'Fraunces',serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-mono);min-height:100vh;}
+.app{max-width:560px;margin:0 auto;padding:32px 20px 100px;}
+
+.header{margin-bottom:32px;}
+.header h1{font-family:var(--font-serif);font-size:32px;font-weight:300;letter-spacing:-0.5px;line-height:1.2;}
+.header h1 em{font-style:italic;color:var(--green);}
+.header p{font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:0.5px;text-transform:uppercase;}
+
+.goal-bar{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:20px;}
+.goal-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;}
+.goal-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.goal-nums{display:flex;align-items:baseline;gap:6px;}
+.goal-current{font-size:30px;font-weight:500;color:var(--green);font-family:var(--font-serif);}
+.goal-target{font-size:14px;color:var(--muted);}
+.track{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:16px;}
+.track-fill{height:100%;border-radius:3px;background:var(--green);transition:width 0.5s cubic-bezier(.4,0,.2,1);}
+.track-fill.over{background:var(--amber);}
+.macros{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.macro{background:var(--surface2);border-radius:10px;padding:10px 12px;text-align:center;}
+.macro-val{font-size:17px;font-weight:500;margin-bottom:2px;}
+.macro-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.3px;}
+.macro-sub{font-size:10px;color:var(--muted);}
+.m-p{color:#7eb8f5;}.m-c{color:#f5c842;}.m-f{color:#f5a442;}
+
+.section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+
+.quick-add{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;padding:16px;margin-bottom:20px;}
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tab{background:var(--surface2);border:0.5px solid var(--border);border-radius:8px;padding:5px 14px;font-size:11px;font-family:var(--font-mono);cursor:pointer;color:var(--muted);transition:all 0.15s;}
+.tab.active{background:#1f2a10;border-color:var(--green);color:var(--green);}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.qbtn{background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:10px 8px;cursor:pointer;text-align:center;transition:all 0.15s;color:var(--text);}
+.qbtn:hover{border-color:var(--green);background:#1f2a10;}
+.qbtn:active{transform:scale(0.97);}
+.qbtn-name{font-size:11px;font-family:var(--font-mono);display:block;margin-bottom:3px;line-height:1.3;}
+.qbtn-cal{font-size:13px;font-weight:500;color:var(--green);}
+.qbtn-mac{font-size:9px;color:var(--muted);}
+.badge{display:inline-block;font-size:9px;padding:1px 5px;border-radius:4px;background:#1a2e0a;color:var(--green);margin-left:3px;vertical-align:middle;}
+
+.custom-section{border-top:0.5px solid var(--border);padding-top:12px;}
+.custom-row{display:flex;gap:8px;flex-wrap:wrap;}
+.inp{background:var(--surface2);border:0.5px solid var(--border);border-radius:10px;padding:10px 12px;font-family:var(--font-mono);font-size:13px;color:var(--text);outline:none;transition:border-color 0.15s;}
+.inp::placeholder{color:var(--muted);}
+.inp:focus{border-color:var(--green);}
+.inp-name{flex:1;min-width:130px;}.inp-cal{width:82px;}.inp-p{width:66px;}
+.add-btn{background:var(--green);color:#0f0f0e;border:none;border-radius:10px;padding:10px 18px;font-family:var(--font-mono);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;transition:opacity 0.15s;}
+.add-btn:hover{opacity:0.85;}.add-btn:active{transform:scale(0.97);}
+
+.log{background:var(--surface);border:0.5px solid var(--border);border-radius:16px;overflow:hidden;}
+.log-header{padding:14px 16px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.clear-btn{font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:var(--font-mono);padding:0;transition:color 0.15s;}
+.clear-btn:hover{color:var(--red);}
+.log-empty{padding:32px 16px;text-align:center;color:var(--muted);font-size:12px;line-height:1.6;}
+.log-item{display:flex;align-items:center;padding:12px 16px;border-bottom:0.5px solid var(--border);gap:10px;animation:slideIn 0.2s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px);}to{opacity:1;transform:translateX(0);}}
+.log-item:last-child{border-bottom:none;}
+.log-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.log-info{flex:1;min-width:0;}
+.log-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.log-macros{font-size:10px;color:var(--muted);margin-top:2px;}
+.log-cal{font-size:14px;font-weight:500;color:var(--green);margin-left:8px;white-space:nowrap;}
+.log-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px 6px;border-radius:6px;font-size:16px;line-height:1;transition:color 0.15s;margin-left:4px;}
+.log-del:hover{color:var(--red);}
+
+.status-msg{text-align:center;padding:14px;font-size:12px;margin-top:14px;border-radius:12px;line-height:1.5;}
+.status-good{background:#1a2e0a;color:var(--green);}
+.status-over{background:#2e1f0a;color:var(--amber);}
+.status-low{background:#1c1c1a;color:var(--muted);}
+
+.log-total{padding:12px 16px;border-top:0.5px solid var(--border);display:flex;justify-content:space-between;font-size:12px;color:var(--muted);}
+.log-total span:last-child{color:var(--text);font-weight:500;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>calorie<br><em>tracker</em></h1>
+    <p>Goal: 57 → 65 kg · +600 kcal surplus daily</p>
+  </div>
+
+  <div class="goal-bar">
+    <div class="goal-row">
+      <span class="goal-label">Today's calories</span>
+      <div class="goal-nums">
+        <span class="goal-current" id="totalCal">0</span>
+        <span class="goal-target">/ 2600 kcal</span>
+      </div>
+    </div>
+    <div class="track"><div class="track-fill" id="trackFill" style="width:0%"></div></div>
+    <div class="macros">
+      <div class="macro"><div class="macro-val m-p" id="totalP">0g</div><div class="macro-label">Protein</div><div class="macro-sub">goal 100g</div></div>
+      <div class="macro"><div class="macro-val m-c" id="totalC">0g</div><div class="macro-label">Carbs</div><div class="macro-sub">goal 320g</div></div>
+      <div class="macro"><div class="macro-val m-f" id="totalF">0g</div><div class="macro-label">Fat</div><div class="macro-sub">goal 72g</div></div>
+    </div>
+  </div>
+
+  <div class="quick-add">
+    <div class="section-title">Quick add</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('yours',this)">★ Your foods</button>
+      <button class="tab" onclick="switchTab('indian',this)">Indian staples</button>
+    </div>
+    <div class="quick-grid" id="quickGrid"></div>
+    <div class="custom-section">
+      <div class="section-title">Custom food</div>
+      <div class="custom-row">
+        <input class="inp inp-name" id="foodName" placeholder="Food name" />
+        <input class="inp inp-cal" id="foodCal" placeholder="kcal" type="number" min="0"/>
+        <input class="inp inp-p" id="foodP" placeholder="P (g)" type="number" min="0"/>
+        <button class="add-btn" onclick="addCustom()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="log">
+    <div class="log-header">
+      <span class="section-title" style="margin:0;">Today's log</span>
+      <button class="clear-btn" onclick="clearAll()">Clear all</button>
+    </div>
+    <div id="logList"><div class="log-empty">Nothing logged yet —<br>tap a food above to get started</div></div>
+    <div class="log-total" id="logTotal" style="display:none;">
+      <span>Total</span><span id="logTotalVal">0 kcal</span>
+    </div>
+  </div>
+
+  <div id="statusMsg" class="status-msg status-low" style="display:none;"></div>
+</div>
+
+<script>
+const GOAL_CAL=2600,GOAL_P=100,GOAL_C=320,GOAL_F=72;
+
+const foodCategories={
+  yours:[
+    {name:'Whole Truth Protein Shake',cal:140,p:24,c:4,f:3},
+    {name:'Amul Berry Shake (1 bottle)',cal:138,p:20,c:19,f:2},
+    {name:'4 Eggs',cal:280,p:24,c:1,f:20},
+    {name:'Paneer (100g)',cal:265,p:20,c:3,f:20},
+    {name:'4 Chapati',cal:456,p:14,c:74,f:15},
+  ],
+  indian:[
+    {name:'Rice (1 cup cooked)',cal:206,p:4,c:45,f:0},
+    {name:'Dal (1 bowl)',cal:180,p:12,c:28,f:3},
+    {name:'Roti (2 pcs)',cal:228,p:7,c:37,f:7},
+    {name:'Banana (1 large)',cal:120,p:1,c:31,f:0},
+    {name:'Milk (250ml)',cal:150,p:8,c:12,f:8},
+    {name:'Peanut butter (2tbsp)',cal:190,p:8,c:6,f:16},
+    {name:'Chicken breast (100g)',cal:165,p:31,c:0,f:4},
+    {name:'Oats (1 bowl)',cal:150,p:5,c:27,f:3},
+    {name:'Curd (1 bowl)',cal:100,p:6,c:8,f:4},
+  ]
+};
+
+let currentTab='yours';
+let log=JSON.parse(localStorage.getItem('calTracker_v1')||'[]');
+
+function save(){try{localStorage.setItem('calTracker_v1',JSON.stringify(log));}catch(e){}}
+
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderGrid();
+}
+
+function renderGrid(){
+  const grid=document.getElementById('quickGrid');
+  grid.innerHTML='';
+  foodCategories[currentTab].forEach(f=>{
+    const btn=document.createElement('button');
+    btn.className='qbtn';
+    const badge=currentTab==='yours'?`<span class="badge">★</span>`:'';
+    btn.innerHTML=`<span class="qbtn-name">${f.name}${badge}</span><span class="qbtn-cal">${f.cal} kcal</span><br><span class="qbtn-mac">P${f.p} C${f.c} F${f.f}</span>`;
+    btn.onclick=()=>addItem(f);
+    grid.appendChild(btn);
+  });
+}
+
+function render(){
+  const t=log.reduce((a,i)=>({cal:a.cal+i.cal,p:a.p+i.p,c:a.c+i.c,f:a.f+i.f}),{cal:0,p:0,c:0,f:0});
+  document.getElementById('totalCal').textContent=Math.round(t.cal);
+  document.getElementById('totalP').textContent=Math.round(t.p)+'g';
+  document.getElementById('totalC').textContent=Math.round(t.c)+'g';
+  document.getElementById('totalF').textContent=Math.round(t.f)+'g';
+  const pct=Math.min((t.cal/GOAL_CAL)*100,100);
+  const fill=document.getElementById('trackFill');
+  fill.style.width=pct+'%';
+  fill.className='track-fill'+(t.cal>GOAL_CAL?' over':'');
+
+  const list=document.getElementById('logList');
+  const totalRow=document.getElementById('logTotal');
+  if(!log.length){
+    list.innerHTML='<div class="log-empty">Nothing logged yet —<br>tap a food above to get started</div>';
+    totalRow.style.display='none';
+  } else {
+    list.innerHTML=log.map((item,i)=>`
+      <div class="log-item">
+        <div class="log-dot"></div>
+        <div class="log-info">
+          <div class="log-name">${item.name}</div>
+          <div class="log-macros">P ${item.p}g · C ${item.c}g · F ${item.f}g</div>
+        </div>
+        <div class="log-cal">+${item.cal}</div>
+        <button class="log-del" onclick="removeItem(${i})" title="Remove">×</button>
+      </div>
+    `).join('');
+    totalRow.style.display='flex';
+    document.getElementById('logTotalVal').textContent=Math.round(t.cal)+' kcal';
+  }
+
+  const rem=GOAL_CAL-t.cal;
+  const msg=document.getElementById('statusMsg');
+  if(t.cal===0){msg.style.display='none';return;}
+  msg.style.display='block';
+  if(rem>200){
+    msg.className='status-msg status-low';
+    msg.textContent=Math.round(rem)+' kcal remaining to hit your surplus goal';
+  } else if(rem>=0){
+    msg.className='status-msg status-good';
+    msg.textContent='Almost there! Just '+Math.round(rem)+' kcal left — great day!';
+  } else {
+    msg.className='status-msg status-over';
+    msg.textContent='Surplus goal hit! '+Math.round(Math.abs(rem))+' kcal over — solid!';
+  }
+}
+
+function addItem(food){log.push({...food});save();render();}
+function removeItem(i){log.splice(i,1);save();render();}
+function clearAll(){if(confirm('Clear today\'s log?')){log=[];save();render();}}
+
+function addCustom(){
+  const name=document.getElementById('foodName').value.trim();
+  const cal=parseFloat(document.getElementById('foodCal').value)||0;
+  const p=parseFloat(document.getElementById('foodP').value)||0;
+  if(!name||!cal)return;
+  addItem({name,cal:Math.round(cal),p:Math.round(p),c:0,f:0});
+  document.getElementById('foodName').value='';
+  document.getElementById('foodCal').value='';
+  document.getElementById('foodP').value='';
+  document.getElementById('foodName').focus();
+}
+
+document.getElementById('foodP').addEventListener('keydown',e=>{if(e.key==='Enter')addCustom();});
+document.getElementById('foodCal').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('foodP').focus();});
+
+renderGrid();
+render();
+</script>
+</body>
+</html>
